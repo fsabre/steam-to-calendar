@@ -10,21 +10,27 @@ This program :
 The data retrieved is :
 
 - [ ] The account creation date
-- [ ] The achievements dates
-- [ ] The purchases dates
+- [X] The achievements dates
+- [ ] The purchases date
 
 ## Run Locally
 
-Clone the project
+Clone the project and go to the directory
 
 ```bash
   git clone https://github.com/fsabre/steam-to-calendar.git
+  cd steam-to-calendar
 ```
 
-Go to the project directory
+Place the webdriver corresponding to your web
+browser ([Selenium documentation](https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/))
+in the directory (works with Chromium-based browsers for now)
 
-```bash
-  cd steam-to-calendar
+Update the paths in `src/config.py`
+
+```python3
+CHROME_PATH: Final = r"C:\Program Files\Vivaldi\Application\Vivaldi.exe"
+CHROME_DRIVER_PATH: Final = "chromedriver.exe"
 ```
 
 Install dependencies
@@ -38,5 +44,5 @@ Install dependencies
 Run the program
 
 ```bash
-  python stc.py
+  python stc.py fetch YOUR_STEAM_ID
 ```
