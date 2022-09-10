@@ -14,13 +14,16 @@ def fetch(config: Config) -> None:
     try:
         games = driver.get_game_list()
 
-        for game in games:
-            logger.info("Fetching achievements dates of '%s'", game.name)
-            dates = driver.get_achievements_dates(game.id)
+        if config.no_achievements:
+            logger.info("Skipping the achievements fetch")
+        else:
+            for game in games:
+                logger.info("Fetching achievements dates of '%s'", game.name)
+                dates = driver.get_achievements_dates(game.id)
 
-            if dates:
-                game.min_achievement_date = min(dates)
-                game.max_achievement_date = max(dates)
+                if dates:
+                    game.min_achievement_date = min(dates)
+                    game.max_achievement_date = max(dates)
 
         save_to_file(games, config=config)
 
@@ -35,8 +38,10 @@ def main_cli():
 
 @main_cli.command("fetch")
 @click.argument("steam_id")
-def fetch_command(steam_id: str) -> None:
+@click.option("-na", "--no-achievements", is_flag=True, help="Don't fetch the achievements dates")
+def fetch_command(steam_id: str, no_achievements: bool) -> None:
     """Fetch the Steam data and save it to a file.
 
     You can find your STEAM_ID by looking at your profile URL."""
-    fetch(Config(username=steam_id))
+    config = Config(username=steam_id, no_achievements=no_achievements)
+    fetch(config)

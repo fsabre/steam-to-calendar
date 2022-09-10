@@ -14,6 +14,8 @@ class Config:
     username: str
     # File where the data will be saved
     destination_file: Path = ROOT_PATH / "dump.json"
+    # Whether to fetch the achievements dates
+    no_achievements: bool = False
 
     def games_url(self) -> str:
         """URL used to fetch the game list"""
