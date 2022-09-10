@@ -1,35 +1,30 @@
 import click
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 
-from .config import CHROME_DRIVER_PATH, CHROME_PATH, Config
+from .config import Config
 from .logger import logger
-from .parsing import get_achievements_interval, retrieve_game_list
+from .parsing import MyWebDriver
 from .storage import save_to_file
 
 
 def fetch(config: Config) -> None:
     """Fetch data by scraping Steam with Selenium."""
-    logger.info("Start the Web driver")
-    service = Service(executable_path=CHROME_DRIVER_PATH)
-    options = Options()
-    options.binary_location = CHROME_PATH
-    options.add_argument("--lang=en")  # Use the english language to allow parsing
-    driver = webdriver.Chrome(service=service, options=options)
+
+    driver = MyWebDriver(config=config)
 
     try:
-        games = retrieve_game_list(driver, config)
+        games = driver.get_game_list()
 
         for game in games:
             logger.info("Fetching achievements dates of '%s'", game.name)
-            dates_interval = get_achievements_interval(driver, game.id)
-            (game.min_achievement_date, game.max_achievement_date) = dates_interval
+            dates = driver.get_achievements_dates(game.id)
 
-        save_to_file(games, config)
+            if dates:
+                game.min_achievement_date = min(dates)
+                game.max_achievement_date = max(dates)
+
+        save_to_file(games, config=config)
 
     finally:
-        logger.info("Quit the Web driver")
         driver.quit()
 
 
