@@ -5,7 +5,7 @@ View its Steam history on a calendar.
 This program :
 
 - Parse the Steam website and save the retrieved data to a file
-- Generate an camera image based on a data file
+- Generate an calendar image based on a data file
 
 The data retrieved is :
 
@@ -45,4 +45,5 @@ Run the program
 
 ```bash
   python stc.py fetch YOUR_STEAM_ID
+  python stc.py draw
 ```
