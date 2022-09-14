@@ -1,6 +1,7 @@
+import contextlib
 import re
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -81,18 +82,27 @@ class MyWebDriver:
         all_dates: List[datetime] = []
         for date_element in self.driver.find_elements(By.CLASS_NAME, "achieveUnlockTime"):
             raw_date: str = date_element.text
-            # logger.debug("Raw date : %s", raw_date)
-            try:
-                date = datetime.strptime(raw_date, "Unlocked %d %b, %Y @ %I:%M%p")
-                # logger.debug("Parsed date : %s", date)
+            date: Optional[datetime] = understand_date(raw_date)
+            if date is not None:
+                logger.debug("'%s' -> %s", raw_date, date)
                 all_dates.append(date)
-            except ValueError:
-                try:
-                    date = datetime.strptime(raw_date, "Unlocked %d %b @ %I:%M%p")
-                    # logger.debug("Parsed date : %s", date)
-                    all_dates.append(date)
-                except ValueError as err:
-                    logger.error("Error when parsing : %s", raw_date, err)
+            else:
+                logger.error("Couldn't parse '%s'", raw_date)
 
         # logger.debug("All dates parsed : %s", all_dates)
         return all_dates
+
+
+def understand_date(raw: str) -> Optional[datetime]:
+    """Convert a formatted date into a datetime object.
+
+    :param raw: The formatted date
+    :return: The datetime object or None
+    """
+    with contextlib.suppress(ValueError):
+        return datetime.strptime(raw, "Unlocked %d %b, %Y @ %I:%M%p")
+    with contextlib.suppress(ValueError):
+        parsed = datetime.strptime(raw, "Unlocked %d %b @ %I:%M%p")
+        filled = parsed.replace(year=datetime.now().year)
+        return filled
+    return None
