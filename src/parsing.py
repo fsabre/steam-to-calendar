@@ -46,8 +46,11 @@ class MyWebDriver:
 
         logger.debug("Look for game rows")
         game_rows = self.driver.find_elements(By.CSS_SELECTOR, ".gameListRow")
-        if len(game_rows) == 0:
+        game_rows_count: int = len(game_rows)
+        if game_rows_count <= 0:
             logger.warning("No game row found")
+        else:
+            logger.info("%d game rows found", game_rows_count)
 
         for game_row in game_rows:
             game_id_raw: str = game_row.get_attribute("id")
