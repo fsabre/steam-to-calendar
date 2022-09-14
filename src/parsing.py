@@ -21,6 +21,7 @@ class MyWebDriver:
         options = Options()
         options.binary_location = CHROME_PATH
         options.add_argument("--lang=en")  # Use the english language to allow parsing
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])  # Disable selenium logging
 
         self.driver = webdriver.Chrome(service=service, options=options)
         self.config = config
