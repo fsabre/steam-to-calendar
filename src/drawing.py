@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Dict, Generator, List, Optional, Tuple
 
 from .config import ROOT_PATH
+from .logger import logger
 from .models import Game
 
 YearMonth = Tuple[int, int]
@@ -18,12 +19,13 @@ def prepare_data(games: List[Game]) -> Tuple[TotalData, datetime, datetime]:
     """Convert the game list to a structure of datetimes to be displayed.
     Also provide the earliest and latest datetimes.
     """
+    logger.info("Prepare the data for display")
     output: TotalData = defaultdict(lambda: defaultdict(list))
     earliest_date: Optional[datetime] = None
     latest_date: Optional[datetime] = None
 
     for game in games:
-        for date in (game.min_achievement_date, game.max_achievement_date):
+        for date in game.achievement_dates:
             if date is None:
                 continue
             year_month: YearMonth = (date.year, date.month)
@@ -73,6 +75,7 @@ def draw_calendar(games: List[Game]) -> None:
     """Draw the whole calendar as text."""
     data, start, end = prepare_data(games)
     with (ROOT_PATH / "cal.txt").open("w") as file:
+        logger.info("Display the calendar")
         with contextlib.redirect_stdout(file):
             for year_month in range_year_month(start, end):
                 year, month = year_month

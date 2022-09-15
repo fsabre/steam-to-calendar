@@ -22,6 +22,7 @@ def fetch(config: Config) -> None:
                 logger.info("Fetching achievements dates of '%s'", game.name)
                 dates = driver.get_achievements_dates(game.id)
 
+                game.achievement_dates = dates
                 if dates:
                     game.min_achievement_date = min(dates)
                     game.max_achievement_date = max(dates)

@@ -16,6 +16,7 @@ def save_to_file(games: List[Game], config: Config) -> None:
             {
                 "id": game.id,
                 "name": game.name,
+                "achievement_dates": [date.isoformat() for date in game.achievement_dates],
                 "min_achievement_date": game.min_achievement_date.isoformat() if game.min_achievement_date is not None else None,
                 "max_achievement_date": game.max_achievement_date.isoformat() if game.max_achievement_date is not None else None,
             } for game in games
@@ -31,7 +32,11 @@ def load_from_file(path: Path) -> List[Game]:
 
     output: List[Game] = []
     for game_data in loaded_data:
-        game = Game(id=game_data["id"], name=game_data["name"])
+        game = Game(
+            id=game_data["id"],
+            name=game_data["name"],
+            achievement_dates=[datetime.fromisoformat(data) for data in game_data["achievement_dates"]],
+        )
         if (min_date := game_data["min_achievement_date"]) is not None:
             game.min_achievement_date = datetime.fromisoformat(min_date)
         if (max_date := game_data["max_achievement_date"]) is not None:
