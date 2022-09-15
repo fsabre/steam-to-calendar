@@ -1,9 +1,10 @@
 import click
 
-from .config import Config
+from .config import Config, DEFAULT_DATA_FILE
+from .drawing import draw_calendar
 from .logger import logger
 from .parsing import MyWebDriver
-from .storage import save_to_file
+from .storage import load_from_file, save_to_file
 
 
 def fetch(config: Config) -> None:
@@ -31,6 +32,11 @@ def fetch(config: Config) -> None:
         driver.quit()
 
 
+def draw() -> None:
+    games = load_from_file(DEFAULT_DATA_FILE)
+    draw_calendar(games)
+
+
 @click.group()
 def main_cli():
     """View your Steam history on a calendar."""
@@ -45,3 +51,9 @@ def fetch_command(steam_id: str, no_achievements: bool) -> None:
     You can find your STEAM_ID by looking at your profile URL."""
     config = Config(username=steam_id, no_achievements=no_achievements)
     fetch(config)
+
+
+@main_cli.command("draw")
+def draw_command() -> None:
+    """Draw the dates of a data file as a calendar."""
+    draw()

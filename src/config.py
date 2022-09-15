@@ -6,6 +6,7 @@ CHROME_PATH: Final = r"C:\Program Files\Vivaldi\Application\Vivaldi.exe"
 CHROME_DRIVER_PATH: Final = "chromedriver.exe"
 
 ROOT_PATH = Path(__file__).parent.parent
+DEFAULT_DATA_FILE = ROOT_PATH / "dump.json"
 
 
 @dataclass
@@ -13,7 +14,7 @@ class Config:
     # Steam account ID (in profile URL)
     username: str
     # File where the data will be saved
-    destination_file: Path = ROOT_PATH / "dump.json"
+    destination_file: Path = DEFAULT_DATA_FILE
     # Whether to fetch the achievements dates
     no_achievements: bool = False
 
