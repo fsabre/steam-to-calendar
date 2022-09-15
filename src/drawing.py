@@ -59,14 +59,15 @@ def draw_line(year: int, month: int, game: str, dates: List[datetime]) -> None:
             output.append("X")
         else:
             output.append(".")
-    formatted_name = game[0:9]
-    print(f"{formatted_name:10}\t" + "\t".join(output))
+    formatted_name = game[0:16]
+    print(f"{formatted_name:19}\t" + "\t".join(output))
 
 
 def draw_month(year: int, month: int, games: Dict[str, List[datetime]]) -> None:
     """Draw a month line and its games lines."""
-    print(f"--- {str(month).zfill(2)}/{year} ---")
-    print(" " * 10 + "\t" + "\t".join(str(day) if day != 0 else " " for day in cal.itermonthdays(year, month)))
+    month_label = f"----- {str(month).zfill(2)}/{year} -----"
+    days_numbers = "\t".join(str(day) if day != 0 else " " for day in cal.itermonthdays(year, month))
+    print(month_label + "\t" + days_numbers)
     for game, dates in games.items():
         draw_line(year, month, game, dates)
 
