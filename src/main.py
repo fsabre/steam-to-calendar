@@ -1,7 +1,7 @@
 import click
 
 from .config import Config, DEFAULT_DATA_FILE
-from .drawing import draw_calendar
+from .drawing import draw_html_calendar, draw_text_calendar
 from .logger import logger
 from .parsing import MyWebDriver
 from .storage import load_from_file, save_to_file
@@ -33,9 +33,12 @@ def fetch(config: Config) -> None:
         driver.quit()
 
 
-def draw() -> None:
+def draw(mode: str) -> None:
     games = load_from_file(DEFAULT_DATA_FILE)
-    draw_calendar(games)
+    if mode == "text":
+        draw_text_calendar(games)
+    else:
+        draw_html_calendar(games)
 
 
 @click.group()
@@ -55,6 +58,13 @@ def fetch_command(steam_id: str, no_achievements: bool) -> None:
 
 
 @main_cli.command("draw")
-def draw_command() -> None:
+@click.option(
+    "-m", "--mode",
+    type=click.Choice(["text", "html"], case_sensitive=False),
+    default="html",
+    show_default=True,
+    help="Change the output mode",
+)
+def draw_command(mode: str) -> None:
     """Draw the dates of a data file as a calendar."""
-    draw()
+    draw(mode)

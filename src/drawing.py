@@ -3,24 +3,28 @@ import contextlib
 import itertools
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, Generator, List, Optional, Tuple
+from typing import Dict, Generator, List, Optional, Set, Tuple, TypedDict
+
+import jinja2
 
 from .config import ROOT_PATH
 from .logger import logger
 from .models import Game
 
-YearMonth = Tuple[int, int]
-TotalData = Dict[YearMonth, Dict[str, List[datetime]]]
-
 cal = calendar.Calendar()
 
+# TEXT CALENDAR
 
-def prepare_data(games: List[Game]) -> Tuple[TotalData, datetime, datetime]:
+YearMonth = Tuple[int, int]
+PreparedTextData = Dict[YearMonth, Dict[str, List[datetime]]]
+
+
+def prepare_data_for_text(games: List[Game]) -> Tuple[PreparedTextData, datetime, datetime]:
     """Convert the game list to a structure of datetimes to be displayed.
     Also provide the earliest and latest datetimes.
     """
-    logger.info("Prepare the data for display")
-    output: TotalData = defaultdict(lambda: defaultdict(list))
+    logger.info("Prepare the data for text display")
+    output: PreparedTextData = defaultdict(lambda: defaultdict(list))
     earliest_date: Optional[datetime] = None
     latest_date: Optional[datetime] = None
 
@@ -48,7 +52,7 @@ def range_year_month(start: datetime, end: datetime) -> Generator[YearMonth, Non
     yield from i3
 
 
-def draw_line(year: int, month: int, game: str, dates: List[datetime]) -> None:
+def draw_text_line(year: int, month: int, game: str, dates: List[datetime]) -> None:
     """Draw a game line."""
     days_to_mark = set(date.day for date in dates)
     output = []
@@ -63,21 +67,95 @@ def draw_line(year: int, month: int, game: str, dates: List[datetime]) -> None:
     print(f"{formatted_name:19}\t" + "\t".join(output))
 
 
-def draw_month(year: int, month: int, games: Dict[str, List[datetime]]) -> None:
+def draw_text_month(year: int, month: int, games: Dict[str, List[datetime]]) -> None:
     """Draw a month line and its games lines."""
     month_label = f"----- {str(month).zfill(2)}/{year} -----"
     days_numbers = "\t".join(str(day) if day != 0 else " " for day in cal.itermonthdays(year, month))
     print(month_label + "\t" + days_numbers)
     for game, dates in games.items():
-        draw_line(year, month, game, dates)
+        draw_text_line(year, month, game, dates)
 
 
-def draw_calendar(games: List[Game]) -> None:
+def draw_text_calendar(games: List[Game]) -> None:
     """Draw the whole calendar as text."""
-    data, start, end = prepare_data(games)
-    with (ROOT_PATH / "cal.txt").open("w") as file:
-        logger.info("Display the calendar")
+    data, start, end = prepare_data_for_text(games)
+    destination_file = ROOT_PATH / "cal.txt"
+    with destination_file.open("w") as file:
+        logger.info("Export the calendar as text to %s", destination_file)
         with contextlib.redirect_stdout(file):
             for year_month in range_year_month(start, end):
                 year, month = year_month
-                draw_month(year, month, data[year_month])
+                draw_text_month(year, month, data[year_month])
+
+
+# HTMl CALENDAR
+
+class GameHTMLData(TypedDict):
+    name: str
+    dates: Set[int]
+
+
+class MonthHTMLData(TypedDict):
+    year: int
+    month: int
+    days: List[int]
+    games: List[GameHTMLData]
+
+
+PreparedHTMLData = List[MonthHTMLData]
+
+
+def prepare_data_for_html(games: List[Game]) -> PreparedHTMLData:
+    """Convert the game list to a structure to be displayed.
+    It's easier to prepare the data in Python than in Jinja2.
+    But now it must be ordered.
+    """
+    logger.info("Prepare the data for HTML display")
+    output: PreparedHTMLData = []
+
+    # I'm going to use the text data, it's more convenient that starting to
+    # iterate on games again.
+    text_data, start, end = prepare_data_for_text(games)
+
+    for year_month in range_year_month(start, end):
+        year, month = year_month
+        games: List[GameHTMLData] = []
+        # All YearMonth doesn't exist in text_data, so we have to check that the
+        # current one is present.
+        if year_month in text_data:
+            for old_game_name, old_date_list in text_data[year_month].items():
+                game: GameHTMLData = dict(
+                    name=old_game_name,
+                    dates={date.day for date in old_date_list},
+                )
+                games.append(game)
+        month_html_data: MonthHTMLData = dict(
+            year=year,
+            month=month,
+            days=list(cal.itermonthdays(year, month)),
+            games=games,
+        )
+        output.append(month_html_data)
+    return output
+
+
+def draw_html_calendar(games: List[Game]) -> None:
+    """Draw the whole calendar as HTML."""
+    # Create the jinja environment
+    jinja_env = jinja2.Environment(
+        loader=jinja2.PackageLoader("src"),
+        autoescape=jinja2.select_autoescape(),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    template = jinja_env.get_template("html_calendar.jinja2")
+    # Prepare the data
+    data = prepare_data_for_html(games)
+    # Render the template to a file
+    destination_file = ROOT_PATH / "cal.html"
+    with destination_file.open("w", encoding="utf8") as file:
+        logger.info("Export the calendar as HTML to %s", destination_file)
+        rendered = template.render(
+            data=data,
+        )
+        file.write(rendered)
