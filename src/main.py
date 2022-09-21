@@ -19,13 +19,8 @@ def fetch(config: Config) -> None:
             logger.info("Skipping the achievements fetch")
         else:
             for game in games:
-                logger.info("Fetching achievements dates of '%s'", game.name)
-                dates = driver.get_achievements_dates(game.id)
-
-                game.achievement_dates = dates
-                if dates:
-                    game.min_achievement_date = min(dates)
-                    game.max_achievement_date = max(dates)
+                logger.info("Fetching achievements of '%s'", game.name)
+                game.events = driver.get_achievements_events(game.id)
 
         save_to_file(games, config=config)
 

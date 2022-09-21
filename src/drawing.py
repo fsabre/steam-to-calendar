@@ -29,9 +29,8 @@ def prepare_data_for_text(games: List[Game]) -> Tuple[PreparedTextData, datetime
     latest_date: Optional[datetime] = None
 
     for game in games:
-        for date in game.achievement_dates:
-            if date is None:
-                continue
+        for event in game.events:
+            date = event.date
             year_month: YearMonth = (date.year, date.month)
             output[year_month][game.name].append(date)
             if earliest_date is None or date < earliest_date:
