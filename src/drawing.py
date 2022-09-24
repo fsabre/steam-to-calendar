@@ -177,6 +177,19 @@ def draw_text_calendar(games: List[Game]) -> None:
 
 # HTMl CALENDAR
 
+def make_day_description(events: List[Event]) -> str:
+    length: int = len(events)
+    if length == 0:
+        return "No events"
+
+    titles = [ev.extras.get("title", "...") for ev in events]
+    summary = "\n".join("- " + title for title in titles if title != "")
+    if length == 1:
+        return f"1 event :\n{summary}"
+    else:
+        return f"{length} events :\n{summary}"
+
+
 def draw_html_calendar(games: List[Game]) -> None:
     """Draw the whole calendar as HTML."""
     # Create the jinja environment
@@ -197,5 +210,6 @@ def draw_html_calendar(games: List[Game]) -> None:
         logger.info("Export the calendar as HTML to %s", destination_file)
         rendered = template.render(
             data=data,
+            make_day_description=make_day_description,
         )
         file.write(rendered)
