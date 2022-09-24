@@ -15,15 +15,17 @@ class Event:
     extras: Dict[str, Any]
 
     @classmethod
-    def create_achievement_event(cls: Type[T], event_date: datetime) -> T:
+    def create_achievement_event(cls: Type[T], event_date: datetime, title: str, desc: str) -> T:
         """Create a new Event with the achievement type.
         :param event_date: The date of the achievement unlock
+        :param title: The title of the achievement
+        :param desc: The description of the achievement
         :return: The Event object
         """
         return cls(
             type="achievement",
             date=event_date,
-            extras={},
+            extras=dict(title=title, desc=desc),
         )
 
     @classmethod

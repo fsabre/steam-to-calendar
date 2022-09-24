@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -84,12 +85,20 @@ class MyWebDriver:
         self.driver.get(achievement_url)
 
         all_events: List[Event] = []
-        for date_element in self.driver.find_elements(By.CLASS_NAME, "achieveUnlockTime"):
-            raw_date: str = date_element.text
+
+        for web_element in self.driver.find_elements(By.CLASS_NAME, "achieveTxtHolder"):
+            title: str = web_element.find_element(By.CSS_SELECTOR, "h3").text
+            desc: str = web_element.find_element(By.CSS_SELECTOR, "h5").text
+            # The unlocking date may not be there, because the achievement may
+            # not be unlocked.
+            try:
+                raw_date: str = web_element.find_element(By.CLASS_NAME, "achieveUnlockTime").text
+            except NoSuchElementException:
+                continue
             date: Optional[datetime] = understand_date(raw_date)
             if date is not None:
                 logger.debug("'%s' -> %s", raw_date, date)
-                event = Event.create_achievement_event(event_date=date)
+                event = Event.create_achievement_event(event_date=date, title=title, desc=desc)
                 all_events.append(event)
             else:
                 logger.error("Couldn't parse '%s'", raw_date)
