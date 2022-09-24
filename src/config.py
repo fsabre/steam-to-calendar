@@ -24,4 +24,7 @@ class Config:
 
     def achievements_url(self, game_id: str) -> str:
         """URL used to fetch the game list"""
+        # Team Fortress 2 acts differently.
+        if game_id == "440":
+            game_id = "TF2"
         return f"https://steamcommunity.com/id/{self.username}/stats/{game_id}/?tab=achievements"
