@@ -1,9 +1,9 @@
-{% macro month_header(data) %}
+{% macro month_header(month_data) %}
     <div class="month-header line">
-        <div class="month-label first-column">----- {{ "%02d"%data.month }}/{{ data.year }} -----</div>
-        {% for day in data.days %}
-            {% if day != 0 %}
-                <div class="day-label day-cell">{{ day }}</div>
+        <div class="month-label first-column">----- {{ "%02d"%month_data.month }}/{{ month_data.year }} -----</div>
+        {% for day_number in month_data.days %}
+            {% if day_number != 0 %}
+                <div class="day-label day-cell">{{ day_number }}</div>
             {% else %}
                 <div class="day-label-blank day-cell"></div>
             {% endif %}
@@ -11,20 +11,20 @@
     </div>
 {% endmacro %}
 
-{% macro game_line(data, game) %}
+{% macro game_line(game_name, days_data) %}
     <div class="game-line line">
-        <div class="game-label first-column">{{ game.name }}</div>
-        {% for day in data.days %}
-            <div class="game-point day-cell">{{ "X" if day in game.dates else "" }}</div>
+        <div class="game-label first-column">{{ game_name }}</div>
+        {% for day_data in days_data %}
+            <div class="game-point day-cell">{{ "X" if day_data.event_count > 0 else "" }}</div>
         {% endfor %}
     </div>
 {% endmacro %}
 
-{% macro month(data) %}
+{% macro month(month_data) %}
     <div class="month">
-        {{ month_header(data) }}
-        {% for game in data.games %}
-            {{ game_line(data, game) }}
+        {{ month_header(month_data) }}
+        {% for line_data in month_data.lines %}
+            {{ game_line(line_data.game_name, line_data.days) }}
         {% endfor %}
     </div>
 {% endmacro %}

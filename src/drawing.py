@@ -2,42 +2,54 @@ import calendar
 import contextlib
 import itertools
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Generator, List, Optional, Set, Tuple, TypedDict
+from typing import Dict, Generator, List, Optional, Tuple
 
 import jinja2
 
 from .config import ROOT_PATH
 from .logger import logger
-from .models import Game
+from .models import Event, Game
 
 cal = calendar.Calendar()
 
-# TEXT CALENDAR
-
 YearMonth = Tuple[int, int]
-PreparedTextData = Dict[YearMonth, Dict[str, List[datetime]]]
 
 
-def prepare_data_for_text(games: List[Game]) -> Tuple[PreparedTextData, datetime, datetime]:
-    """Convert the game list to a structure of datetimes to be displayed.
-    Also provide the earliest and latest datetimes.
+@dataclass
+class PrepDay:
+    day: int
+    event_count: int
+    events: List[Event]
+
+
+@dataclass
+class PrepLine:
+    game_name: str
+    days: List[PrepDay]
+
+
+@dataclass
+class PrepMonth:
+    year: int
+    month: int
+    days: List[int]
+    lines: List[PrepLine]
+
+
+def get_days_in_month(year: int, month: int, padding=True) -> List[int]:
+    """Return the days numbers in a month.
+    :param year: The year of the month
+    :param month: The number of the month
+    :param padding: Whether to keep the 0 at the start to match the other
+        month's alignment (the first 0 is a monday)
+    :return: The list of days numbers
     """
-    logger.info("Prepare the data for text display")
-    output: PreparedTextData = defaultdict(lambda: defaultdict(list))
-    earliest_date: Optional[datetime] = None
-    latest_date: Optional[datetime] = None
-
-    for game in games:
-        for event in game.events:
-            date = event.date
-            year_month: YearMonth = (date.year, date.month)
-            output[year_month][game.name].append(date)
-            if earliest_date is None or date < earliest_date:
-                earliest_date = date
-            if latest_date is None or date > latest_date:
-                latest_date = date
-    return output, earliest_date, latest_date
+    generator = cal.itermonthdays(year, month)
+    if padding is False:
+        generator = filter(lambda d: d != 0, generator)
+    return list(generator)
 
 
 def range_year_month(start: datetime, end: datetime) -> Generator[YearMonth, None, None]:
@@ -51,92 +63,119 @@ def range_year_month(start: datetime, end: datetime) -> Generator[YearMonth, Non
     yield from i3
 
 
-def draw_text_line(year: int, month: int, game: str, dates: List[datetime]) -> None:
+def prepare_data_for_display(games: List[Game]) -> Optional[List[PrepMonth]]:
+    """Return a structure of months, lines, days and events suitable for
+    display.
+    :param games: The list of games and events to prepare
+    :return: The convenient data structure, or None if no events have been found
+    """
+    earliest_date: Optional[datetime] = None
+    latest_date: Optional[datetime] = None
+
+    # The aim is not to spend useless time processing the data.
+    # Thus, we are doing two loops :
+    # - One over all events, to group them by month, game and day.
+    # - One over all months, to constitute the final data structure.
+
+    # 1. Group the events
+
+    # The following definition is a bit strange. The aim is to use
+    # grouped_events[(year, month)][game_name][day] to get a list of events.
+    # The defaultdict structure create itself as we use the object.
+    grouped_events: Dict[YearMonth, Dict[str, Dict[int, List[Event]]]]
+    grouped_events = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+
+    for game in games:
+        for event in game.events:
+            date: datetime = event.date
+            year_month: YearMonth = (date.year, date.month)
+            # Insert the event at the right place in grouped_events
+            grouped_events[year_month][game.name][date.day].append(event)
+            # Update the min/max dates in order to know which months to display
+            if earliest_date is None or date < earliest_date:
+                earliest_date = date
+            if latest_date is None or date > latest_date:
+                latest_date = date
+
+    if earliest_date is None:  # latest_date will be None too
+        return None
+
+    # 2. Create a structure with all the months
+
+    rv: List[PrepMonth] = []
+    for ym in range_year_month(earliest_date, latest_date):
+        days_in_months: List[int] = get_days_in_month(ym[0], ym[1])
+        lines_data: List[PrepLine] = []
+        # If there's an event this month, that means there's a game, so we have
+        # to add a line to the month data.
+        if ym in grouped_events:
+            for game_name, days in grouped_events[ym].items():
+                # The line must be filled with a PrepDay for every day of the
+                # current month. Those PrepDay must also be filled with a list
+                # of events that occurred this day and belong to this line.
+                days_data: List[PrepDay] = []
+                for day in days_in_months:
+                    event_list: List[Event] = grouped_events[ym][game_name][day]
+                    day_data = PrepDay(
+                        day=day,
+                        event_count=len(event_list),
+                        events=event_list,
+                    )
+                    days_data.append(day_data)
+                line_data = PrepLine(game_name=game_name, days=days_data)
+                lines_data.append(line_data)
+        month_data = PrepMonth(
+            year=ym[0],
+            month=ym[1],
+            days=days_in_months,
+            lines=lines_data,
+        )
+        rv.append(month_data)
+
+    return rv
+
+
+# TEXT CALENDAR
+
+
+def draw_text_line(line_data: PrepLine) -> None:
     """Draw a game line."""
-    days_to_mark = set(date.day for date in dates)
     output = []
-    for day in cal.itermonthdays(year, month):
-        if day == 0:
+    for day_data in line_data.days:
+        if day_data.day == 0:
             output.append(" ")
-        elif day in days_to_mark:
+        elif day_data.event_count > 0:
             output.append("X")
         else:
             output.append(".")
-    formatted_name = game[0:16]
+    formatted_name = line_data.game_name[0:16]
     print(f"{formatted_name:19}\t" + "\t".join(output))
 
 
-def draw_text_month(year: int, month: int, games: Dict[str, List[datetime]]) -> None:
+def draw_text_month(month_data: PrepMonth) -> None:
     """Draw a month line and its games lines."""
+    year, month = month_data.year, month_data.month
     month_label = f"----- {str(month).zfill(2)}/{year} -----"
-    days_numbers = "\t".join(str(day) if day != 0 else " " for day in cal.itermonthdays(year, month))
+    days_numbers = "\t".join(str(day) if day != 0 else " " for day in month_data.days)
     print(month_label + "\t" + days_numbers)
-    for game, dates in games.items():
-        draw_text_line(year, month, game, dates)
+    for line_data in month_data.lines:
+        draw_text_line(line_data)
 
 
 def draw_text_calendar(games: List[Game]) -> None:
     """Draw the whole calendar as text."""
-    data, start, end = prepare_data_for_text(games)
+    data = prepare_data_for_display(games)
+    if data is None:
+        raise ValueError("There's no data to display")
     destination_file = ROOT_PATH / "cal.txt"
     with destination_file.open("w") as file:
         logger.info("Export the calendar as text to %s", destination_file)
         with contextlib.redirect_stdout(file):
-            for year_month in range_year_month(start, end):
-                year, month = year_month
-                draw_text_month(year, month, data[year_month])
+            for month_data in data:
+                draw_text_month(month_data)
 
 
 # HTMl CALENDAR
-
-class GameHTMLData(TypedDict):
-    name: str
-    dates: Set[int]
-
-
-class MonthHTMLData(TypedDict):
-    year: int
-    month: int
-    days: List[int]
-    games: List[GameHTMLData]
-
-
-PreparedHTMLData = List[MonthHTMLData]
-
-
-def prepare_data_for_html(games: List[Game]) -> PreparedHTMLData:
-    """Convert the game list to a structure to be displayed.
-    It's easier to prepare the data in Python than in Jinja2.
-    But now it must be ordered.
-    """
-    logger.info("Prepare the data for HTML display")
-    output: PreparedHTMLData = []
-
-    # I'm going to use the text data, it's more convenient that starting to
-    # iterate on games again.
-    text_data, start, end = prepare_data_for_text(games)
-
-    for year_month in range_year_month(start, end):
-        year, month = year_month
-        games: List[GameHTMLData] = []
-        # All YearMonth doesn't exist in text_data, so we have to check that the
-        # current one is present.
-        if year_month in text_data:
-            for old_game_name, old_date_list in text_data[year_month].items():
-                game: GameHTMLData = dict(
-                    name=old_game_name,
-                    dates={date.day for date in old_date_list},
-                )
-                games.append(game)
-        month_html_data: MonthHTMLData = dict(
-            year=year,
-            month=month,
-            days=list(cal.itermonthdays(year, month)),
-            games=games,
-        )
-        output.append(month_html_data)
-    return output
-
 
 def draw_html_calendar(games: List[Game]) -> None:
     """Draw the whole calendar as HTML."""
@@ -149,7 +188,9 @@ def draw_html_calendar(games: List[Game]) -> None:
     )
     template = jinja_env.get_template("html_calendar.jinja2")
     # Prepare the data
-    data = prepare_data_for_html(games)
+    data = prepare_data_for_display(games)
+    if data is None:
+        raise ValueError("There's no data to display")
     # Render the template to a file
     destination_file = ROOT_PATH / "cal.html"
     with destination_file.open("w", encoding="utf8") as file:
