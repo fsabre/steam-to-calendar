@@ -168,7 +168,7 @@ def draw_text_calendar(games: List[Game]) -> None:
     if data is None:
         raise ValueError("There's no data to display")
     destination_file = ROOT_PATH / "cal.txt"
-    with destination_file.open("w") as file:
+    with destination_file.open("w", encoding="utf8") as file:
         logger.info("Export the calendar as text to %s", destination_file)
         with contextlib.redirect_stdout(file):
             for month_data in data:
