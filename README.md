@@ -44,6 +44,6 @@ Install dependencies
 Run the program
 
 ```bash
-  python stc.py fetch YOUR_STEAM_ID
+  python stc.py fetch YOUR_STEAM_PROFILE_URL
   python stc.py draw
 ```

@@ -11,8 +11,8 @@ DEFAULT_DATA_FILE = ROOT_PATH / "dump.json"
 
 @dataclass
 class Config:
-    # Steam account ID (in profile URL)
-    username: str
+    # Public Steam profile URL
+    profile_url: str
     # File where the data will be saved
     destination_file: Path = DEFAULT_DATA_FILE
     # Whether to fetch the achievements dates
@@ -20,11 +20,11 @@ class Config:
 
     def games_url(self) -> str:
         """URL used to fetch the game list"""
-        return f"https://steamcommunity.com/id/{self.username}/games/?tab=all&sort=name"
+        return f"{self.profile_url}/games/?tab=all&sort=name"
 
     def achievements_url(self, game_id: str) -> str:
         """URL used to fetch the game list"""
         # Team Fortress 2 acts differently.
         if game_id == "440":
             game_id = "TF2"
-        return f"https://steamcommunity.com/id/{self.username}/stats/{game_id}/?tab=achievements"
+        return f"{self.profile_url}/stats/{game_id}/?tab=achievements"

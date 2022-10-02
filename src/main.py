@@ -42,13 +42,13 @@ def main_cli():
 
 
 @main_cli.command("fetch")
-@click.argument("steam_id")
+@click.argument("steam_profile_url")
 @click.option("-na", "--no-achievements", is_flag=True, help="Don't fetch the achievements dates")
-def fetch_command(steam_id: str, no_achievements: bool) -> None:
+def fetch_command(steam_profile_url: str, no_achievements: bool) -> None:
     """Fetch the Steam data and save it to a file.
 
-    You can find your STEAM_ID by looking at your profile URL."""
-    config = Config(username=steam_id, no_achievements=no_achievements)
+    You can find your STEAM_PROFILE_URL by looking at your profile URL."""
+    config = Config(profile_url=steam_profile_url, no_achievements=no_achievements)
     fetch(config)
 
 
