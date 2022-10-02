@@ -15,7 +15,7 @@
 
 {% macro game_line(game_name, days_data) %}
     <div class="game-line line">
-        <div class="game-label first-column">{{ game_name }}</div>
+        <div class="game-label first-column" title="{{ game_name }}">{{ game_name }}</div>
         {% for day_data in days_data %}
             {% if day_data.day == 0 %}
                 <div class="game-point-blank day-cell"></div>
