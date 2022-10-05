@@ -2,12 +2,12 @@ import json
 from pathlib import Path
 from typing import List
 
-from .config import Config
+from .config import FetchConfig
 from .logger import logger
 from .models import Game
 
 
-def save_to_file(games: List[Game], config: Config) -> None:
+def save_to_file(games: List[Game], config: FetchConfig) -> None:
     """Save the game data to a file."""
     logger.info("Dump output to %s", config.destination_file)
     with config.destination_file.open("w") as destination_file:

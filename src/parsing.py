@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
-from .config import CHROME_DRIVER_PATH, CHROME_PATH, Config
+from .config import CHROME_DRIVER_PATH, CHROME_PATH, FetchConfig
 from .logger import logger
 from .models import Event, Game
 
@@ -17,7 +17,7 @@ from .models import Event, Game
 class MyWebDriver:
     """Custom wrapper for the selenium web driver."""
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: FetchConfig) -> None:
         logger.info("Start the Web driver")
         service = Service(executable_path=CHROME_DRIVER_PATH)
         options = Options()

@@ -8,7 +8,7 @@ from typing import Dict, Generator, List, Optional, Tuple
 
 import jinja2
 
-from .config import ROOT_PATH
+from .config import DrawConfig
 from .logger import logger
 from .models import Event, Game
 
@@ -162,12 +162,12 @@ def draw_text_month(month_data: PrepMonth) -> None:
         draw_text_line(line_data)
 
 
-def draw_text_calendar(games: List[Game]) -> None:
+def draw_text_calendar(games: List[Game], config: DrawConfig) -> None:
     """Draw the whole calendar as text."""
     data = prepare_data_for_display(games)
     if data is None:
         raise ValueError("There's no data to display")
-    destination_file = ROOT_PATH / "cal.txt"
+    destination_file = config.export_file
     with destination_file.open("w", encoding="utf8") as file:
         logger.info("Export the calendar as text to %s", destination_file)
         with contextlib.redirect_stdout(file):
@@ -190,7 +190,7 @@ def make_day_description(events: List[Event]) -> str:
         return f"{length} events :\n{summary}"
 
 
-def draw_html_calendar(games: List[Game]) -> None:
+def draw_html_calendar(games: List[Game], config: DrawConfig) -> None:
     """Draw the whole calendar as HTML."""
     # Create the jinja environment
     jinja_env = jinja2.Environment(
@@ -205,7 +205,7 @@ def draw_html_calendar(games: List[Game]) -> None:
     if data is None:
         raise ValueError("There's no data to display")
     # Render the template to a file
-    destination_file = ROOT_PATH / "cal.html"
+    destination_file = config.export_file
     with destination_file.open("w", encoding="utf8") as file:
         logger.info("Export the calendar as HTML to %s", destination_file)
         rendered = template.render(

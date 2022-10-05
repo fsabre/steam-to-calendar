@@ -1,16 +1,19 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
+
+ExportMode = Literal["text", "html"]
 
 CHROME_PATH: Final = r"C:\Program Files\Vivaldi\Application\Vivaldi.exe"
 CHROME_DRIVER_PATH: Final = "chromedriver.exe"
 
 ROOT_PATH = Path(__file__).parent.parent
 DEFAULT_DATA_FILE = ROOT_PATH / "dump.json"
+DEFAULT_EXPORT_FILE = ROOT_PATH / "cal.html"
 
 
 @dataclass
-class Config:
+class FetchConfig:
     # Public Steam profile URL
     profile_url: str
     # File where the data will be saved
@@ -28,3 +31,19 @@ class Config:
         if game_id == "440":
             game_id = "TF2"
         return f"{self.profile_url}/stats/{game_id}/?tab=achievements"
+
+
+@dataclass
+class DrawConfig:
+    # Export mode (text, html, ...)
+    mode: ExportMode
+    # File where the data will be read
+    data_file: Path = DEFAULT_DATA_FILE
+    # File where the calendar will be exported
+    export_file: Path = DEFAULT_EXPORT_FILE
+
+    def __post_init__(self) -> None:
+        # Ensure the extension fit the export mode, but only if it wasn't
+        # manually changed
+        if self.export_file == DEFAULT_EXPORT_FILE:
+            self.export_file = self.export_file.with_suffix(".txt" if self.mode == "text" else ".html")

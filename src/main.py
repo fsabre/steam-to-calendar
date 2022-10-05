@@ -1,13 +1,15 @@
+from pathlib import Path
+
 import click
 
-from .config import Config, DEFAULT_DATA_FILE
+from .config import DEFAULT_DATA_FILE, DEFAULT_EXPORT_FILE, DrawConfig, ExportMode, FetchConfig
 from .drawing import draw_html_calendar, draw_text_calendar
 from .logger import logger
 from .parsing import MyWebDriver
 from .storage import load_from_file, save_to_file
 
 
-def fetch(config: Config) -> None:
+def fetch(config: FetchConfig) -> None:
     """Fetch data by scraping Steam with Selenium."""
 
     driver = MyWebDriver(config=config)
@@ -28,12 +30,12 @@ def fetch(config: Config) -> None:
         driver.quit()
 
 
-def draw(mode: str) -> None:
-    games = load_from_file(DEFAULT_DATA_FILE)
-    if mode == "text":
-        draw_text_calendar(games)
+def draw(config: DrawConfig) -> None:
+    games = load_from_file(config.data_file)
+    if config.mode == "text":
+        draw_text_calendar(games, config=config)
     else:
-        draw_html_calendar(games)
+        draw_html_calendar(games, config=config)
 
 
 @click.group()
@@ -44,11 +46,22 @@ def main_cli():
 @main_cli.command("fetch")
 @click.argument("steam_profile_url")
 @click.option("-na", "--no-achievements", is_flag=True, help="Don't fetch the achievements dates")
-def fetch_command(steam_profile_url: str, no_achievements: bool) -> None:
+@click.option(
+    "-o", "--output",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    default=DEFAULT_DATA_FILE,
+    show_default=True,
+    help="Path of the data file to write",
+)
+def fetch_command(steam_profile_url: str, no_achievements: bool, output: Path) -> None:
     """Fetch the Steam data and save it to a file.
 
     You can find your STEAM_PROFILE_URL by looking at your profile URL."""
-    config = Config(profile_url=steam_profile_url, no_achievements=no_achievements)
+    config = FetchConfig(
+        profile_url=steam_profile_url,
+        no_achievements=no_achievements,
+        destination_file=output,
+    )
     fetch(config)
 
 
@@ -60,6 +73,21 @@ def fetch_command(steam_profile_url: str, no_achievements: bool) -> None:
     show_default=True,
     help="Change the output mode",
 )
-def draw_command(mode: str) -> None:
+@click.option(
+    "-f", "--file",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+    default=DEFAULT_DATA_FILE,
+    show_default=True,
+    help="Path of the data file to parse",
+)
+@click.option(
+    "-o", "--output",
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    default=DEFAULT_EXPORT_FILE,
+    show_default=True,
+    help="Path of the calendar export",
+)
+def draw_command(mode: ExportMode, file: Path, output: Path) -> None:
     """Draw the dates of a data file as a calendar."""
-    draw(mode)
+    config = DrawConfig(mode=mode, data_file=file, export_file=output)
+    draw(config)
