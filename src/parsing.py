@@ -3,8 +3,8 @@ import re
 from datetime import datetime
 from typing import List, Optional
 
+from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.common import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -83,18 +83,23 @@ class MyWebDriver:
         """
         achievement_url = self.config.achievements_url(game_id)
         self.driver.get(achievement_url)
+        # Wait for an "achieveTxtHolder" to be detected in the page
+        # WebDriverWait(self.driver, timeout=5).until(lambda d: d.find_element(By.CLASS_NAME, "achieveTxtHolder"))
+
+        text: str = self.driver.page_source
+        soup = BeautifulSoup(text, "html.parser")
 
         all_events: List[Event] = []
 
-        for web_element in self.driver.find_elements(By.CLASS_NAME, "achieveTxtHolder"):
-            title: str = web_element.find_element(By.CSS_SELECTOR, "h3").text
-            desc: str = web_element.find_element(By.CSS_SELECTOR, "h5").text
+        for web_element in soup.find_all(class_="achieveTxtHolder"):
+            title: str = web_element.find("h3").text
+            desc: str = web_element.find("h5").text
+            date_element = web_element.find(class_="achieveUnlockTime")
             # The unlocking date may not be there, because the achievement may
-            # not be unlocked.
-            try:
-                raw_date: str = web_element.find_element(By.CLASS_NAME, "achieveUnlockTime").text
-            except NoSuchElementException:
+            # not be unlocked. In that case, we skip it.
+            if date_element is None:
                 continue
+            raw_date: str = date_element.text
             date: Optional[datetime] = understand_date(raw_date)
             if date is not None:
                 logger.debug("'%s' -> %s", raw_date, date)
@@ -112,6 +117,7 @@ def understand_date(raw: str) -> Optional[datetime]:
     :param raw: The formatted date
     :return: The datetime object or None
     """
+    raw = raw.strip()
     with contextlib.suppress(ValueError):
         return datetime.strptime(raw, "Unlocked %d %b, %Y @ %I:%M%p")
     with contextlib.suppress(ValueError):
