@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final, Literal
+from typing import Final, Literal, Tuple
 
 ExportMode = Literal["text", "html"]
 
@@ -20,6 +20,8 @@ class FetchConfig:
     destination_file: Path = DEFAULT_DATA_FILE
     # Whether to fetch the achievements dates
     no_achievements: bool = False
+    # List of game ID. Only parse the achievements of those games.
+    only_achievements_for: Tuple[str, ...] = field(default_factory=tuple)
 
     def games_url(self) -> str:
         """URL used to fetch the game list"""
