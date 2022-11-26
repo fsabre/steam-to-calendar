@@ -5,6 +5,7 @@ import click
 
 from .config import DEFAULT_DATA_FILE, DEFAULT_EXPORT_FILE, DrawConfig, ExportMode, FetchConfig
 from .drawing import draw_html_calendar, draw_text_calendar
+from .exceptions import STCException
 from .logger import logger
 from .models import Game
 from .parsing import MyWebDriver
@@ -17,6 +18,9 @@ def fetch(config: FetchConfig) -> None:
     driver = MyWebDriver(config=config)
 
     try:
+        if config.login_user:
+            driver.log_in_user()
+
         games = driver.get_game_list()
 
         # List of games whose achievements will be fetched
@@ -37,6 +41,11 @@ def fetch(config: FetchConfig) -> None:
 
         save_to_file(games, config=config)
 
+    except STCException as err:
+        # Only display the main error message
+        logger.error(err)
+    except KeyboardInterrupt:
+        pass
     finally:
         driver.quit()
 
@@ -56,6 +65,7 @@ def main_cli():
 
 @main_cli.command("fetch")
 @click.argument("steam_profile_url")
+@click.option("-l", "--login", is_flag=True, help="Prompt the user to login")
 @click.option("-na", "--no-achievements", is_flag=True, help="Don't fetch the achievements dates")
 @click.option(
     "-oa",
@@ -72,6 +82,7 @@ def main_cli():
 )
 def fetch_command(
     steam_profile_url: str,
+    login: bool,
     no_achievements: bool,
     only_achievements_for: Tuple[str, ...],
     output: Path
@@ -81,6 +92,7 @@ def fetch_command(
     You can find your STEAM_PROFILE_URL by looking at your profile URL."""
     config = FetchConfig(
         profile_url=steam_profile_url,
+        login_user=login,
         no_achievements=no_achievements,
         only_achievements_for=only_achievements_for,
         destination_file=output,

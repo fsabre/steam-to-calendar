@@ -7,6 +7,9 @@ ExportMode = Literal["text", "html"]
 CHROME_PATH: Final = r"C:\Program Files\Vivaldi\Application\Vivaldi.exe"
 CHROME_DRIVER_PATH: Final = "chromedriver.exe"
 
+HOME_PAGE: Final = "https://store.steampowered.com/"
+LOGIN_PAGE: Final = "https://store.steampowered.com/login"
+
 ROOT_PATH = Path(__file__).parent.parent
 DEFAULT_DATA_FILE = ROOT_PATH / "dump.json"
 DEFAULT_EXPORT_FILE = ROOT_PATH / "cal.html"
@@ -16,6 +19,8 @@ DEFAULT_EXPORT_FILE = ROOT_PATH / "cal.html"
 class FetchConfig:
     # Public Steam profile URL
     profile_url: str
+    # Whether to prompt the user for login
+    login_user: bool = False
     # File where the data will be saved
     destination_file: Path = DEFAULT_DATA_FILE
     # Whether to fetch the achievements dates
