@@ -73,7 +73,10 @@ class MyWebDriver:
         game_rows = self.driver.find_elements(By.CSS_SELECTOR, ".gameListRow")
         game_rows_count: int = len(game_rows)
         if game_rows_count <= 0:
-            logger.warning("No game row found")
+            logger.warning(
+                "No game row found. "
+                "Maybe this profile is private ? Try with the --login option."
+            )
         else:
             logger.info("%d game rows found", game_rows_count)
 
