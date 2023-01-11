@@ -1,6 +1,6 @@
 import contextlib
 import re
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 from bs4 import BeautifulSoup
@@ -36,6 +36,15 @@ class MyWebDriver:
     def quit(self) -> None:
         logger.info("Quit the Web driver")
         self.driver.quit()
+
+    def get_page_timezone_offset(self) -> int:
+        """Return the timezone offset in seconds provided by the Steam cookie."""
+        offset_cookie = self.driver.get_cookie("timezoneOffset")
+        if offset_cookie is not None:
+            raw_offset: str = offset_cookie["value"]
+            # Convert the part before "," or "." to an integer
+            return int(raw_offset.replace(",", ".").partition(".")[0])
+        return 0
 
     def is_user_connected(self) -> bool:
         """Return True if a user is connected."""
@@ -115,6 +124,9 @@ class MyWebDriver:
         text: str = self.driver.page_source
         soup = BeautifulSoup(text, "html.parser")
 
+        timezone_offset: int = self.get_page_timezone_offset()
+        new_tzinfo = timezone(timedelta(seconds=timezone_offset))
+
         all_events: List[Event] = []
 
         for web_element in soup.find_all(class_="achieveTxtHolder"):
@@ -125,11 +137,19 @@ class MyWebDriver:
             # not be unlocked. In that case, we skip it.
             if date_element is None:
                 continue
-            raw_date: str = date_element.text
+            raw_date: str = date_element.text.strip()
             date: Optional[datetime] = understand_date(raw_date)
             if date is not None:
+                # Add the timezone info
+                date = date.replace(tzinfo=new_tzinfo)
+
                 # logger.debug("'%s' -> %s", raw_date, date)
-                event = Event.create_achievement_event(event_date=date, title=title, desc=desc)
+                event = Event.create_achievement_event(
+                    # Store an UTC datetime
+                    event_date=date.astimezone(timezone.utc),
+                    title=title,
+                    desc=desc,
+                )
                 all_events.append(event)
             else:
                 logger.error("Couldn't parse '%s'", raw_date)
@@ -143,7 +163,6 @@ def understand_date(raw: str) -> Optional[datetime]:
     :param raw: The formatted date
     :return: The datetime object or None
     """
-    raw = raw.strip()
     with contextlib.suppress(ValueError):
         return datetime.strptime(raw, "Unlocked %d %b, %Y @ %I:%M%p")
     with contextlib.suppress(ValueError):

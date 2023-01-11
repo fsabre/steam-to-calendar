@@ -87,7 +87,9 @@ def prepare_data_for_display(games: List[Game]) -> Optional[List[PrepMonth]]:
 
     for game in games:
         for event in game.events:
-            date: datetime = event.date
+            # Use the local timezone
+            date: datetime = event.date.astimezone(tz=None)
+            event.date = date
             year_month: YearMonth = (date.year, date.month)
             # Insert the event at the right place in grouped_events
             grouped_events[year_month][game.name][date.day].append(event)

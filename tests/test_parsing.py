@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 import pytest
 
@@ -30,7 +30,7 @@ def test_get_achievements_events(webdriver: MyWebDriver) -> None:
     assert len(events) == 45, "Number of unlocked achievements is wrong"
     no_time_to_explain_event = Event(
         type="achievement",
-        date=datetime(2018, 5, 27, 10, 33),
+        date=datetime(2018, 5, 27, 19, 33, tzinfo=timezone(timedelta(hours=1))),
         extras=dict(
             title="No Time To Explain",
             desc="Complete Train Rush without dying or time bonuses!",
