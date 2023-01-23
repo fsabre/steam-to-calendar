@@ -118,9 +118,21 @@ class MyWebDriver:
         :param game_id: The Steam ID of the game
         :return: A list of achievement events
         """
-        achievement_url = self.config.achievements_url(game_id)
-        logger.debug("Open the page %s", achievement_url)
-        self.driver.get(achievement_url)
+        url = self.config.achievements_url(game_id)
+        # The page must be in english to be parsed.
+        # So I set a cookie to force it in english.
+        # But if there's a redirection, the cookie is changed by the connected
+        # user language. In that case, I set again the cookie, then refresh.
+        for try_no in range(1, 6):
+            logger.debug("Open the page %s (try %s)", url, try_no)
+            self.driver.add_cookie({"name": "Steam_Language", "value": "english"})
+            self.driver.get(url)
+            lang = self.driver.find_element(By.CSS_SELECTOR, "html").get_attribute("lang")
+            if lang == "en":
+                break
+            url = self.driver.current_url
+        else:
+            logger.warning("Couldn't load %s in english", url)
 
         text: str = self.driver.page_source
         soup = BeautifulSoup(text, "html.parser")
