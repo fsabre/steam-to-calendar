@@ -31,6 +31,7 @@ class MyWebDriver:
         )
 
         self.driver = webdriver.Chrome(service=service, options=options)
+        self.driver.get("https://steamcommunity.com")  # TODO Too heavy, find a lighter page
         self.config = config
 
     def quit(self) -> None:
