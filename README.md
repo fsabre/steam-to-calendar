@@ -13,9 +13,21 @@ The data retrieved is :
 - [X] The achievements dates
 - [ ] The purchases date
 
-## Run Locally
+## FAQ
 
-Clone the project and go to the directory
+### Why don't you use the official Steam API ?
+
+- No way to fetch data from private profiles
+- No way to fetch purchase date
+
+### Can this program fetch data from private profiles ?
+
+Yes, you can ! Use the `--login` flag to be redirected on the Steam login page when the program starts. Once you are
+logged in, you'll be able to parse data from yourself and from your friends if they allowed you to do so.
+
+## Run locally
+
+Clone the project and go to the directory :
 
 ```bash
   git clone https://github.com/fsabre/steam-to-calendar.git
@@ -26,14 +38,14 @@ Place the webdriver corresponding to your web
 browser ([Selenium documentation](https://www.selenium.dev/documentation/webdriver/getting_started/install_drivers/))
 in the directory (works with Chromium-based browsers for now)
 
-Update the paths in `src/config.py`
+Update the paths for your browser and its driver in `src/config.py` :
 
 ```python3
 CHROME_PATH: Final = r"C:\Program Files\Vivaldi\Application\Vivaldi.exe"
 CHROME_DRIVER_PATH: Final = "chromedriver.exe"
 ```
 
-Install dependencies
+Install the dependencies in a virtual environment :
 
 ```bash
   python3 -m venv venv
@@ -41,11 +53,20 @@ Install dependencies
   pip install -r requirements.txt
 ```
 
-Run the program
+## Usage
+
+Start to fetch your data with the `fetch` command, then draw the calendar with `draw` :
 
 ```bash
-  python stc.py fetch YOUR_STEAM_PROFILE_URL
+  python stc.py fetch YOUR_STEAM_PROFILE_URL  # Add --login if your profile is private
   python stc.py draw
+```
+
+Additional help for the command line options is available with :
+
+```bash
+  python stc.py fetch --help
+  python stc.py draw --help
 ```
 
 ## Screenshots
