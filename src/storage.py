@@ -12,15 +12,15 @@ from .models import Game
 def save_to_file(games: List[Game], config: FetchConfig) -> None:
     """Save the game data to a file."""
     logger.info("Dump output to %s", config.destination_file)
-    with config.destination_file.open("w") as destination_file:
+    with config.destination_file.open("w", encoding="utf8") as destination_file:
         output_json = [game.to_json() for game in games]
-        json.dump(output_json, destination_file, indent=4)
+        json.dump(output_json, destination_file, indent=4, ensure_ascii=False)
 
 
 def load_from_file(path: Path) -> List[Game]:
     """Load the data from a file."""
     logger.info("Load data from %s", path)
-    with path.open() as source_file:
+    with path.open(encoding="utf8") as source_file:
         loaded_data = json.load(source_file)
 
     output: List[Game] = []
