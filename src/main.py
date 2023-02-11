@@ -1,3 +1,5 @@
+"""Define the command line endpoints."""
+
 from pathlib import Path
 from typing import List, Tuple
 
@@ -31,7 +33,10 @@ def fetch(config: FetchConfig) -> None:
             games_to_parse_achiev = []
         elif config.only_achievements_for:
             logger.info("Fetching achievements of those games : %s", config.only_achievements_for)
-            games_to_parse_achiev = [g for g in games_to_parse_achiev if g.id in config.only_achievements_for]
+            games_to_parse_achiev = [
+                g for g in games_to_parse_achiev
+                if g.id in config.only_achievements_for
+            ]
         else:
             logger.info("Fetching achievements of all games")
 
@@ -81,11 +86,11 @@ def main_cli():
     help="Path of the data file to write",
 )
 def fetch_command(
-    steam_profile_url: str,
-    login: bool,
-    no_achievements: bool,
-    only_achievements_for: Tuple[str, ...],
-    output: Path
+        steam_profile_url: str,
+        login: bool,
+        no_achievements: bool,
+        only_achievements_for: Tuple[str, ...],
+        output: Path,
 ) -> None:
     """Fetch the Steam data and save it to a file.
 

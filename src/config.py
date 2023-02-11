@@ -1,3 +1,5 @@
+"""Define the models containing launch configuration."""
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, Literal, Tuple
@@ -53,4 +55,6 @@ class DrawConfig:
         # Ensure the extension fit the export mode, but only if it wasn't
         # manually changed
         if self.export_file == DEFAULT_EXPORT_FILE:
-            self.export_file = self.export_file.with_suffix(".txt" if self.mode == "text" else ".html")
+            self.export_file = self.export_file.with_suffix(
+                ".txt" if self.mode == "text" else ".html"
+            )

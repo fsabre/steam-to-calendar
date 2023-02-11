@@ -1,3 +1,5 @@
+"""Define the functions to prepare the calendar data and render it to a file."""
+
 import calendar
 import contextlib
 import itertools
@@ -180,6 +182,7 @@ def draw_text_calendar(games: List[Game], config: DrawConfig) -> None:
 # HTMl CALENDAR
 
 def make_day_description(events: List[Event]) -> str:
+    """Return the description to display beneath a day."""
     length: int = len(events)
     if length == 0:
         return "No events"

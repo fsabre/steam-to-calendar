@@ -7,6 +7,7 @@ from typing import Final
 DEV_MODE: Final[bool] = False
 LOG_FORMAT: Final[str] = "%(asctime)s::%(levelname)s::%(message)s"
 
+# Terminal color codes
 DARK_GRAY = "\x1b[1;30m"
 YELLOW = "\x1b[33;21m"
 RED = "\x1b[31;21m"
@@ -22,6 +23,8 @@ FORMATS = {
 
 
 class ColoredFormatter(logging.Formatter):
+    """Logging formatter with colors depending on the level."""
+
     def format(self, record: logging.LogRecord) -> str:
         return FORMATS.get(record.levelno, "") + super().format(record) + RESET
 

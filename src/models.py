@@ -1,3 +1,5 @@
+"""Define the data models."""
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Type, TypeVar
@@ -9,7 +11,7 @@ EVENT_TYPE = Literal["purchase", "achievement"]
 
 @dataclass
 class Event:
-    """A date with a event type and additional data if needed."""
+    """A date with an event type and additional data if needed."""
     type: EVENT_TYPE
     date: datetime
     extras: Dict[str, Any]

@@ -1,3 +1,6 @@
+"""Define custom exceptions for the project."""
+
+
 class STCException(Exception):
     """The base exception for steam-to-calendar"""
     pass

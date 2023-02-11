@@ -1,3 +1,5 @@
+"""Define the webscraping functions."""
+
 import contextlib
 import re
 from datetime import datetime, timezone, timedelta
@@ -31,10 +33,12 @@ class MyWebDriver:
         )
 
         self.driver = webdriver.Chrome(service=service, options=options)
+        # Load one page from the hostname to prepare cookies
         self.driver.get("https://steamcommunity.com")  # TODO Too heavy, find a lighter page
         self.config = config
 
     def quit(self) -> None:
+        """Quit the webdriver."""
         logger.info("Quit the Web driver")
         self.driver.quit()
 
@@ -49,6 +53,7 @@ class MyWebDriver:
 
     def is_user_connected(self) -> bool:
         """Return True if a user is connected."""
+        # The user is connected if their avatar is found.
         avatar_element = self.driver.find_element(By.CSS_SELECTOR, ".user_avatar")
         # user_profile_url = avatar_element.get_attribute("href")
         return avatar_element is not None
@@ -167,6 +172,7 @@ class MyWebDriver:
             else:
                 logger.error("Couldn't parse '%s'", raw_date)
 
+        logger.debug("Found {%s} achievements", len(all_events))
         return all_events
 
 
