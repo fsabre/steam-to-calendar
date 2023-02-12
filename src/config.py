@@ -32,14 +32,16 @@ class FetchConfig:
 
     def games_url(self) -> str:
         """URL used to fetch the game list"""
-        return f"{self.profile_url}/games/?tab=all&sort=name"
+        stripped_profile_url = self.profile_url.rstrip('/')
+        return f"{stripped_profile_url}/games/?tab=all&sort=name"
 
     def achievements_url(self, game_id: str) -> str:
         """URL used to fetch the game list"""
         # Team Fortress 2 acts differently.
         if game_id == "440":
             game_id = "TF2"
-        return f"{self.profile_url}/stats/{game_id}/?tab=achievements"
+        stripped_profile_url = self.profile_url.rstrip('/')
+        return f"{stripped_profile_url}/stats/{game_id}/?tab=achievements"
 
 
 @dataclass
