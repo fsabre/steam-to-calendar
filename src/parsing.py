@@ -24,6 +24,8 @@ class MyWebDriver:
 
     def __init__(self, config: FetchConfig) -> None:
         logger.info("Start the Web driver")
+        self.config = config
+
         service = Service(executable_path=CHROME_DRIVER_PATH)
         options = Options()
         options.binary_location = CHROME_PATH
@@ -31,11 +33,10 @@ class MyWebDriver:
         options.add_experimental_option(
             'excludeSwitches', ['enable-logging']  # Disable selenium logging
         )
-
         self.driver = webdriver.Chrome(service=service, options=options)
+
         # Load one page from the hostname to prepare cookies
         self.driver.get("https://steamcommunity.com")  # TODO Too heavy, find a lighter page
-        self.config = config
 
     def quit(self) -> None:
         """Quit the webdriver."""
