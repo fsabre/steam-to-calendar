@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 
 import pytest
 
@@ -9,7 +10,7 @@ from src.parsing import MyWebDriver
 
 @pytest.fixture
 def webdriver() -> MyWebDriver:
-    config = FetchConfig(profile_url="https://steamcommunity.com/id/Lial_Slasher/")
+    config = FetchConfig(profile_url="https://steamcommunity.com/id/Lial_Slasher/", login_user=True)
     wd = MyWebDriver(config=config)
     yield wd
     wd.quit()
@@ -17,9 +18,9 @@ def webdriver() -> MyWebDriver:
 
 def test_get_game_list(webdriver: MyWebDriver) -> None:
     games = webdriver.get_game_list()
-    a_hat_in_time_game = Game(id="253230", name="A Hat in Time")
-    deathloop_game = Game(id="1252330", name="DEATHLOOP")
-    tf2_game = Game(id="440", name="Team Fortress 2")
+    a_hat_in_time_game = Game(id="253230", name="A Hat in Time", events=[])
+    deathloop_game = Game(id="1252330", name="DEATHLOOP", events=[])
+    tf2_game = Game(id="440", name="Team Fortress 2", events=[])
     assert a_hat_in_time_game in games
     assert deathloop_game in games
     assert tf2_game in games
@@ -36,4 +37,12 @@ def test_get_achievements_events(webdriver: MyWebDriver) -> None:
             desc="Complete Train Rush without dying or time bonuses!",
         ),
     )
-    assert no_time_to_explain_event in events, "Missing an unlocked achievement"
+    found_event: Optional[Event] = next((ev for ev in events if ev.extras["title"] == "No Time To Explain"), None)
+    assert found_event is not None, "Missing an unlocked achievement"
+    assert found_event.type == no_time_to_explain_event.type, "Event type is wrong"
+    assert found_event.extras == no_time_to_explain_event.extras, "Achievement title or description are wrong"
+
+
+def test_get_achievements_events_dates() -> None:
+    # TODO
+    pass

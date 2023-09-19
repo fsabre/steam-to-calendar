@@ -6,11 +6,9 @@ from typing import Final, Literal, Tuple
 
 ExportMode = Literal["text", "html"]
 
-CHROME_PATH: Final = r"C:\Program Files\Vivaldi\Application\Vivaldi.exe"
-CHROME_DRIVER_PATH: Final = "chromedriver.exe"
-
 HOME_PAGE: Final = "https://store.steampowered.com/"
 LOGIN_PAGE: Final = "https://store.steampowered.com/login"
+LOGIN_WAIT_TIMEOUT: Final[int] = 60 * 60  # Time spent waiting for the user to log in, in seconds
 
 ROOT_PATH = Path(__file__).parent.parent
 DEFAULT_DATA_FILE = ROOT_PATH / "dump.json"

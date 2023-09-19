@@ -20,9 +20,6 @@ def fetch(config: FetchConfig) -> None:
     driver = MyWebDriver(config=config)
 
     try:
-        if config.login_user:
-            driver.log_in_user()
-
         games = driver.get_game_list()
 
         # List of games whose achievements will be fetched
@@ -95,6 +92,10 @@ def fetch_command(
     """Fetch the Steam data and save it to a file.
 
     You can find your STEAM_PROFILE_URL by looking at your profile URL."""
+    if not login:
+        click.echo("--login is required for now, as the user game lists seems to be private")
+        return
+
     config = FetchConfig(
         profile_url=steam_profile_url,
         login_user=login,
