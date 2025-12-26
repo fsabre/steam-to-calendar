@@ -69,7 +69,7 @@ class MyWebDriver:
         self.page.goto(games_url)
 
         logger.debug("Look for game rows")
-        game_rows = self.page.locator(".gameslistitems_GamesListItemContainer_29H3o").all()
+        game_rows = self.page.locator(".JeLbcWPaZDg-").all()
         game_rows_count: int = len(game_rows)
         if game_rows_count <= 0:
             logger.warning(
@@ -81,7 +81,7 @@ class MyWebDriver:
 
         for game_row in game_rows:
             # Parse the ID of the game
-            game_title_element = game_row.locator(".gameslistitems_GameName_22awl").first
+            game_title_element = game_row.locator(".UpqjtP0-VK0- > a").first
             game_id: str = game_title_element.get_attribute("href").rpartition("/")[2]
             if not game_id.isdigit():
                 logger.warning("Game ID badly formatted : %s", game_id)
