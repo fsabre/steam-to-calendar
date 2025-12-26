@@ -1,11 +1,11 @@
 # Steam-to-calendar
 
-View its Steam history on a calendar.
+View your Steam history on a calendar.
 
-This program :
+This program:
 
-- Parse the Steam website and save the retrieved data to a file
-- Generate an calendar image based on a data file
+- Parse the Steam website and save the retrieved data to a JSON file
+- Generate a calendar representation (text or HTML) on this file
 
 The data retrieved is :
 
@@ -15,26 +15,36 @@ The data retrieved is :
 
 ## FAQ
 
-### Why don't you use the official Steam API ?
+## Does this program works without logging in ?
 
-- No way to fetch data from private profiles
-- No way to fetch purchase date
+It used to, but now Steam requires the user to be logged in to see the library of any user, regardless of their
+confidentiality configuration.
 
-### Can this program fetch data from private profiles ?
+### Can this program fetch data from private profiles ?
 
 Yes, you can ! Use the `--login` flag to be redirected on the Steam login page when the program starts. Once you are
 logged in, you'll be able to parse data from yourself and from your friends if they allowed you to do so.
 
+### Why don't you use the official Steam API ?
+
+- No way to fetch data from private profiles
+- No way to fetch purchase date
+
+### Can I use another representation for my data ?
+
+As all the data gathered is stored in a JSON file, you are free to script your own way to export it to a more visual
+format.
+
 ## Run locally
 
-Clone the project and go to the directory :
+Clone the project and move to its directory:
 
 ```bash
   git clone https://github.com/fsabre/steam-to-calendar.git
   cd steam-to-calendar
 ```
 
-Install the dependencies in a virtual environment :
+Install the dependencies in a virtual environment:
 
 ```bash
   python3 -m venv venv
@@ -42,7 +52,7 @@ Install the dependencies in a virtual environment :
   pip install -r requirements.txt
 ```
 
-Install the Playwright browser :
+Install the Playwright browser:
 
 ```bash
   playwright install chromium
@@ -50,14 +60,14 @@ Install the Playwright browser :
 
 ## Usage
 
-Start to fetch your data with the `fetch` command, then draw the calendar with `draw` :
+Start to fetch your data with the `fetch` command, then draw the calendar with `draw`:
 
 ```bash
-  python stc.py fetch YOUR_STEAM_PROFILE_URL  # Add --login if your profile is private
+  python stc.py fetch YOUR_STEAM_PROFILE_URL  # Add --login if no game is found
   python stc.py draw
 ```
 
-Additional help for the command line options is available with :
+Get additional help for the command line options with:
 
 ```bash
   python stc.py fetch --help
