@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright, TimeoutError
+from playwright.sync_api import sync_playwright, TimeoutError, Locator
 
 from . import exceptions
 from .config import FetchConfig, LOGIN_PAGE, LOGIN_WAIT_TIMEOUT
@@ -62,16 +62,23 @@ class MyWebDriver:
         :rtype: List[Game]
         :return: A list of Game filled with names and ID
         """
-        games: List[Game] = []
-        games_url = self.config.games_url()
-
+        games_url: str = self.config.games_url()
         logger.debug("Open the page %s", games_url)
         self.page.goto(games_url)
 
         logger.debug("Look for game rows")
-        game_rows = self.page.locator(".JeLbcWPaZDg-").all()
-        game_rows_count: int = len(game_rows)
-        if game_rows_count <= 0:
+        old_row_count: int = 0
+        while True:
+            game_rows: list[Locator] = self.page.locator(".JeLbcWPaZDg-").all()
+            game_rows_count: int = len(game_rows)
+            new_rows_count: int = game_rows_count - old_row_count
+            if new_rows_count == 0:
+                break
+            logger.debug("Found %d new games", new_rows_count)
+            self.page.press("body", "End")  # Scroll to the end of the page to load more
+            old_row_count = game_rows_count
+
+        if game_rows_count == 0:
             logger.warning(
                 "No game row found. "
                 "Maybe this profile is private ? Try with the --login option."
@@ -79,12 +86,13 @@ class MyWebDriver:
         else:
             logger.info("%d game rows found", game_rows_count)
 
+        games: List[Game] = []
         for game_row in game_rows:
             # Parse the ID of the game
-            game_title_element = game_row.locator(".UpqjtP0-VK0- > a").first
+            game_title_element: Locator = game_row.locator(".UpqjtP0-VK0- > a").first
             game_id: str = game_title_element.get_attribute("href").rpartition("/")[2]
             if not game_id.isdigit():
-                logger.warning("Game ID badly formatted : %s", game_id)
+                logger.warning("Game ID badly formatted: %s", game_id)
                 continue
 
             # Parse the name of the game
